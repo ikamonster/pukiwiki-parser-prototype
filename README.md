@@ -1,9 +1,11 @@
-# PukiWiki v1.5.4 対応マークアップ拡張
+# PukiWiki　対応マークアップ記法拡張
 
 インストール直後の素の [PukiWiki v1.5.4](https://pukiwiki.osdn.jp/?PukiWiki/Download/1.5.4) のディレクトリに ``lib/`` と ``plugin/`` を上書きコピーしてください。  
 すると、ページ編集画面にマークアップ選択ボックスが現れます。そこで「markdown」を選ぶと、ページをMarkdown記法で記述できるようになります。従来のPukiWiki記法か新たなMarkdown記法か、ページ単位で選ぶことができます。
 
-複数の任意のマークアップパーサーをPukiWikiに組み込むのにこういう仕組みはどうだろう、との提案用に作りました。
+複数の任意のマークアップパーサーをPukiWikiに組み込むためにこういう仕組みはどうだろう、との提案用に作りました。
+
+<br>
 
 ## 仕組み
 基本的にはただのPukiWiki用プラグインです。  
@@ -20,15 +22,26 @@ plugin/parser/markdown/converter.inc.php 内のMarkdown→HTML変換のコード
 
 また、核となる変換処理にerusev氏作「[Parsedown](https://github.com/erusev/parsedown)」を、編集ヘルパーにlonaru氏作「[EasyMDE](https://github.com/Ionaru/easy-markdown-editor)」を使用しています。
 
+<br>
+
 ## パーサー用プラグイン呼び出し（プラグインMOD）
+マークアップ変更の重大な副作用として、従来のPukiWiki記法に依存する既存のプラグインが正常に動作しなくなることが挙げられます。  
+この問題を、プラグイン機構にいわゆるMOD方式を導入することで解決します。
+
 たとえばMarkdown記法のページを表示する際、plugin/parser/markdown/plugin/ 配下に標準プラグインディレクトリにあるのと同名のプラグインファイルが存在する場合、そちらが優先して実行されます。  
 この仕組みにより、記法の違いにより正常動作しない既存のプラグインを、動作するものにスマートに置き換えることができます。また、対象マークアップ専用のプラグインを置くこともできます。  
-オリジナルのプラグインに手を加えずに済み、マークアップ対応プラグインを明瞭に管理できるメリットがあります。
+
+このとおりMOD方式には、オリジナルのプラグインに手を加えずに済み、マークアップ対応プラグインを明瞭に管理できるメリットがあります。
 
 動作テスト用に plugin/parser/markdown/plugin/comment.inc.php を作成してあります。標準プラグインディレクトリにあるオリジナルの comment.inc.php を、インデント付きリストをMarkdown記法で出力するよう改修したものです。Markdown記法ページに「#comment」を記述するとこちらが呼ばれます。
 
+<br>
+
 ## 必須環境
-同名のパーサー実装クラスやパーサー用プラグイン関数の区別に名前空間を使用するため、PHP5.3以上が必要です。5.3未満ではこの機能拡張が自動的に無視されます。
+同名のパーサー実装クラスやパーサー用プラグイン関数の区別に名前空間を使用するため、PHP5.3以上が必要です。  
+PHP5.3未満の環境ではこの機能拡張が自動的に無効化され、素のPukiWikiとして動作します。
+
+<br>
 
 ## ファイル構成
 
@@ -44,10 +57,12 @@ plugin/parser/markdown/converter.inc.php 内のMarkdown→HTML変換のコード
 |plugin/parser/markdown/plugin/|comment.inc.php|Markdown記法用commentプラグイン|追加|
 |plugin/parser/markdown/vendor/|Parsedown.php|Markdown→HTML変換ライブラリ Parsedown|追加|
 
+<br>
+
 ## PukiWiki v1.5.4 オリジナルとの差分
 https://github.com/ikamonster/pukiwiki-parser-prototype/compare/original...main?diff=split#files_bucket
 
-<br><br><br>
+<br><br><br><br>
 
 # 新たなマークアップパーサーの追加方法（開発者向け）
 
@@ -56,7 +71,9 @@ plugin/parser/markdown/ ディレクトリをまるごとコピペし、変え�
 
 ここでは最低限必要な開発範囲を示す例として、架空の“Sample”マークアップに対応する「sample」という名のパーサーを追加する手順を説明します。
 
-## パーサークラスを作成する
+<br>
+
+## 1. パーサークラスを作成する
 まず、``plugin/parser/`` ディレクトリ内にパーサー名となる ``sample`` というディレクトリを作ります。  
 そして、その中にパーサー本体であるマークアップ→HTML変換実装クラスファイル ``converter.inc.php`` を作ります。
 
@@ -77,7 +94,9 @@ class Converter extends \PluginParserConverter {
 
 コードはコピペでかまいませんが、名前空間をパーサー名に合わせて設定する（ここでは ``parser/sample``）のを忘れないでください。
 
-## マークアップ→HTML変換処理を実装する
+<br>
+
+## 2. マークアップ→HTML変換処理を実装する
 ``Converter::convertHtml(&$lines, $contentID)`` メソッドを実装していきます。  
 第1引数 ``$lines`` が編集テキスト本文、つまり変換対象のマークアップです。文字列型ではなく、1行ごとの文字列が格納された配列となっています。第2引数はとりあえず無視してください。  
 返り値は、変換後のHTMLです。こちらは文字列型です。  
