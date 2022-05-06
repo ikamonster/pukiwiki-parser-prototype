@@ -76,6 +76,14 @@ function plugin_edit_preview_with_template()
 			$msg = remove_author_info(get_source($vars['template_page'], TRUE, TRUE));
 			// Cut fixed anchors
 			$msg = preg_replace('/^(\*{1,3}.*)\[#[A-Za-z][\w-]+\](.*)$/m', '$1$2', $msg);
+
+			// parser.inc.php
+			if (exist_plugin_inline('parser')) {
+				unset($vars['markup']);
+				$parser = do_plugin_inline('parser', 'get_mark', $msg);
+				if ($parser) $vars['markup'] = $parser;
+			}
+
 		}
 	}
 	return plugin_edit_preview($msg);
@@ -94,6 +102,12 @@ function plugin_edit_preview($msg)
 	$page = isset($vars['page']) ? $vars['page'] : '';
 
 	$msg = preg_replace(PLUGIN_EDIT_FREEZE_REGEX, '', $msg);
+
+	// parser.inc.php
+	if (exist_plugin_inline('parser') && isset($vars['markup']) && $vars['markup']) {
+		$msg = do_plugin_inline('parser', 'add_mark,' . trim($vars['markup']), $msg);
+	}
+
 	$postdata = $msg;
 
 	if (isset($vars['add']) && $vars['add']) {
@@ -277,6 +291,11 @@ function plugin_edit_write()
 		$retvars['body']  = '<p><strong>' . $_msg_invalidpass . '</strong></p>' . "\n";
 		$retvars['body'] .= edit_form($page, $msg, $digest, FALSE);
 		return $retvars;
+	}
+
+	// parser.inc.php
+	if (exist_plugin_inline('parser') && isset($vars['markup']) && $vars['markup']) {
+		$postdata = do_plugin_inline('parser', 'add_mark,' . trim($vars['markup']), $postdata);
 	}
 
 	page_write($page, $postdata, $notimeupdate != 0 && $notimestamp);

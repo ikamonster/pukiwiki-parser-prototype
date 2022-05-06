@@ -19,12 +19,42 @@ function set_plugin_messages($messages)
 }
 
 // Check plugin '$name' is here
-function exist_plugin($name)
+function exist_plugin($name, $ns = null)
 {
 	global $vars;
 	static $exist = array(), $count = array();
 
 	$name = strtolower($name);
+
+	// parser.inc.php：パーサー用プラグインディレクトリに同名プラグインがあればそちらを呼び出す。同名関数は名前空間（$ns）で区別する。以下、parser.inc.php関連コードは同様の働き
+	if ($name != 'parser' && ($ns || exist_plugin_inline('parser'))) {
+		$ns_ = $ns;
+		if ($ns || $ns = do_plugin_inline('parser', 'namespace', $tmp)) {
+			$pluginDir = do_plugin_inline('parser', 'plugin_dir', $tmp);
+			if(isset($exist[$ns . $name])) {
+				if (++$count[$ns . $name] > PKWK_PLUGIN_CALL_TIME_LIMIT)
+					die('Alert: plugin "' . htmlsc($pluginDir . $name) .
+					'" was called over ' . PKWK_PLUGIN_CALL_TIME_LIMIT .
+					' times. SPAM or someting?<br />' . "\n" .
+					'<a href="' . get_base_uri() . '?cmd=edit&amp;page='.
+					rawurlencode($vars['page']) . '">Try to edit this page</a><br />' . "\n" .
+					'<a href="' . get_base_uri() . '">Return to frontpage</a>');
+				if ($exist[$ns . $name]) return TRUE;
+			} else {
+				if (preg_match('/^\w{1,64}$/', $name) && file_exists($pluginDir . $name . '.inc.php')) {
+					$exist[$ns . $name] = TRUE;
+					$count[$ns . $name] = 1;
+					require_once($pluginDir . $name . '.inc.php');
+					return TRUE;
+				} else {
+					$exist[$ns . $name] = FALSE;
+					$count[$ns . $name] = 1;
+				}
+			}
+		}
+		if ($ns_) return FALSE;
+	}
+
 	if(isset($exist[$name])) {
 		if (++$count[$name] > PKWK_PLUGIN_CALL_TIME_LIMIT)
 			die('Alert: plugin "' . htmlsc($name) .
@@ -37,20 +67,32 @@ function exist_plugin($name)
 	}
 
 	if (preg_match('/^\w{1,64}$/', $name) &&
-	    file_exists(PLUGIN_DIR . $name . '.inc.php')) {
-	    	$exist[$name] = TRUE;
-	    	$count[$name] = 1;
+		file_exists(PLUGIN_DIR . $name . '.inc.php') &&
+		($name != 'parser' || version_compare('5.3.0', PHP_VERSION, '<='))	// parser.inc.php：PHPが名前空間非対応ならparser.inc.phpを無いものとする
+	) {
+		$exist[$name] = TRUE;
+		$count[$name] = 1;
 		require_once(PLUGIN_DIR . $name . '.inc.php');
 		return TRUE;
 	} else {
-	    	$exist[$name] = FALSE;
-	    	$count[$name] = 1;
+		$exist[$name] = FALSE;
+		$count[$name] = 1;
 		return FALSE;
 	}
 }
 
 // Check if plugin API 'action' exists
-function exist_plugin_action($name) {
+function exist_plugin_action($name, $ns = null) {
+	// parser.inc.php
+	if ($name != 'parser' && ($ns || exist_plugin_inline('parser'))) {
+		$ns_ = $ns;
+		if ($ns || $ns = do_plugin_inline('parser', 'namespace', $tmp)) {
+			if (function_exists($ns . 'plugin_' . $name . '_action')) return TRUE;
+			if (exist_plugin($name, $ns) && function_exists($ns . 'plugin_' . $name . '_action')) return TRUE;
+		}
+		if ($ns_) return FALSE;
+	}
+
 	if (function_exists('plugin_' . $name . '_action')) {
 		return TRUE;
 	}
@@ -61,7 +103,17 @@ function exist_plugin_action($name) {
 }
 
 // Check if plugin API 'convert' exists
-function exist_plugin_convert($name) {
+function exist_plugin_convert($name, $ns = null) {
+	// parser.inc.php
+	if ($name != 'parser' && ($ns || exist_plugin_inline('parser'))) {
+		$ns_ = $ns;
+		if ($ns || $ns = do_plugin_inline('parser', 'namespace', $tmp)) {
+			if (function_exists($ns . 'plugin_' . $name . '_convert')) return TRUE;
+			if (exist_plugin($name, $ns) && function_exists($ns . 'plugin_' . $name . '_convert')) return TRUE;
+		}
+		if ($ns_) return FALSE;
+	}
+
 	if (function_exists('plugin_' . $name . '_convert')) {
 		return TRUE;
 	}
@@ -72,7 +124,17 @@ function exist_plugin_convert($name) {
 }
 
 // Check if plugin API 'inline' exists
-function exist_plugin_inline($name) {
+function exist_plugin_inline($name, $ns = null) {
+	// parser.inc.php
+	if ($name != 'parser' && ($ns || exist_plugin_inline('parser'))) {
+		$ns_ = $ns;
+		if ($ns || $ns = do_plugin_inline('parser', 'namespace', $tmp)) {
+			if (function_exists($ns . 'plugin_' . $name . '_inline')) return TRUE;
+			if (exist_plugin($name, $ns) && function_exists($ns . 'plugin_' . $name . '_inline')) return TRUE;
+		}
+		if ($ns_) return FALSE;
+	}
+
 	if (function_exists('plugin_' . $name . '_inline')) {
 		return TRUE;
 	}
@@ -84,9 +146,20 @@ function exist_plugin_inline($name) {
 
 // Call 'init' function for the plugin
 // NOTE: Returning FALSE means "An erorr occurerd"
-function do_plugin_init($name)
+function do_plugin_init($name, $ns = null)
 {
 	static $done = array();
+
+	// parser.inc.php
+	if ($name != 'parser' && ($ns || exist_plugin_inline('parser'))) {
+		if ($ns || $ns = do_plugin_inline('parser', 'namespace', $tmp)) {
+			if (!isset($done[$ns . $name])) {
+				$func = $ns . 'plugin_' . $name . '_init';
+				$done[$ns . $name] = (! function_exists($func) || call_user_func($func) !== FALSE);
+			}
+			if ($done[$ns . $name]) return $done[$ns . $name];
+		}
+	}
 
 	if (! isset($done[$name])) {
 		$func = 'plugin_' . $name . '_init';
@@ -97,15 +170,19 @@ function do_plugin_init($name)
 }
 
 // Call API 'action' of the plugin
-function do_plugin_action($name)
+function do_plugin_action($name, $ns = null)
 {
-	if (! exist_plugin_action($name)) return array();
+	if (! exist_plugin_action($name, $ns)) return array();
 
 	if (do_plugin_init($name) === FALSE) {
 		die_message('Plugin init failed: ' . htmlsc($name));
 	}
 
-	$retvar = call_user_func('plugin_' . $name . '_action');
+	// parser.inc.php
+	if ($name != 'parser' && ($ns || exist_plugin_inline('parser'))) {
+		if (($ns || $ns = do_plugin_inline('parser', 'namespace', $tmp)) && exist_plugin_action($name, $ns)) $retvar = call_user_func($ns . 'plugin_' . $name . '_action');
+	}
+	if (!$retvar) $retvar = call_user_func('plugin_' . $name . '_action');
 
 	// Insert a hidden field, supports idenrtifying text enconding
 	if (PKWK_ENCODING_HINT != '')
@@ -117,11 +194,11 @@ function do_plugin_action($name)
 }
 
 // Call API 'convert' of the plugin
-function do_plugin_convert($name, $args = '')
+function do_plugin_convert($name, $args = '', $ns = null)
 {
 	global $digest;
 
-	if (do_plugin_init($name) === FALSE) {
+	if (do_plugin_init($name, $ns) === FALSE) {
 		return '[Plugin init failed: ' . htmlsc($name) . ']';
 	}
 
@@ -144,7 +221,15 @@ function do_plugin_convert($name, $args = '')
 	}
 
 	$_digest = $digest;
-	$retvar  = call_user_func_array('plugin_' . $name . '_convert', $aryargs);
+
+	// parser.inc.php
+	if ($name != 'parser' && ($ns || exist_plugin_inline('parser'))) {
+		if (($ns || $ns = do_plugin_inline('parser', 'namespace', $tmp)) && exist_plugin_convert($name, $ns)) {
+			$retvar = call_user_func_array($ns . 'plugin_' . $name . '_convert', $aryargs);
+ 		}
+	}
+
+	if (!$retvar) $retvar = call_user_func_array('plugin_' . $name . '_convert', $aryargs);
 	$digest  = $_digest; // Revert
 
 	if ($retvar === FALSE) {
@@ -161,11 +246,11 @@ function do_plugin_convert($name, $args = '')
 }
 
 // Call API 'inline' of the plugin
-function do_plugin_inline($name, $args, & $body)
+function do_plugin_inline($name, $args, & $body, $ns = null)
 {
 	global $digest;
 
-	if (do_plugin_init($name) === FALSE) {
+	if (do_plugin_init($name, $ns) === FALSE) {
 		return '[Plugin init failed: ' . htmlsc($name) . ']';
 	}
 
@@ -179,7 +264,13 @@ function do_plugin_inline($name, $args, & $body)
 	$aryargs[] = & $body; // func_num_args() != 0
 
 	$_digest = $digest;
-	$retvar  = call_user_func_array('plugin_' . $name . '_inline', $aryargs);
+
+	// parser.inc.php
+	if ($name != 'parser' && ($ns || exist_plugin_inline('parser'))) {
+		if (($ns || $ns = do_plugin_inline('parser', 'namespace', $tmp)) && exist_plugin_inline($name, $ns)) $retvar = call_user_func_array($ns . 'plugin_' . $name . '_inline', $aryargs);
+	}
+
+	if (!$retvar) $retvar = call_user_func_array('plugin_' . $name . '_inline', $aryargs);
 	$digest  = $_digest; // Revert
 
 	if($retvar === FALSE) {

@@ -64,9 +64,13 @@ if (isset($vars['cmd'])) {
 }
 if ($plugin != '') {
 	ensure_valid_auth_user();
-	if (exist_plugin_action($plugin)) {
+
+	// parser.inc.php：「__parser__」パラメータでパーサーが指定されていたら、呼び出し関数の名前空間を設定
+	$ns = (isset($vars['__parser__']) && $vars['__parser__'] && exist_plugin_inline('parser'))? do_plugin_inline('parser', 'namespace,' . trim($vars['__parser__']), $tmp) : null;
+
+	if (exist_plugin_action($plugin, $ns)) {
 		// Found and exec
-		$retvars = do_plugin_action($plugin);
+		$retvars = do_plugin_action($plugin, $ns);
 		if ($retvars === FALSE) exit; // Done
 
 		if ($is_cmd) {
@@ -76,7 +80,7 @@ if ($plugin != '') {
 		}
 	} else {
 		// Not found
-		$msg = 'plugin=' . htmlsc($plugin) .
+		$msg = 'plugin=' . htmlsc($ns . $plugin) .
 			' is not implemented.';
 		$retvars = array('msg'=>$msg,'body'=>$msg);
 		$base    = & $defaultpage;

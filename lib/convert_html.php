@@ -19,6 +19,13 @@ function convert_html($lines)
 
 	if (! is_array($lines)) $lines = explode("\n", $lines);
 
+	// parser.inc.php
+	if (exist_plugin_inline('parser')) {
+		$result = do_plugin_inline('parser', 'convert_html,' . ++$contents_id, $lines);
+		if ($result) return $result;
+		$contents_id--;
+	}
+
 	$body = new Body(++$contents_id);
 	$body->parse($lines);
 

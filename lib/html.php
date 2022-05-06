@@ -404,7 +404,35 @@ EOD;
 			'   ' . '<label for="_edit_form_notimestamp"><span class="small">' .
 			$_btn_notchangetimestamp . '</span></label>' . "\n" .
 			$add_notimestamp .
-			'&nbsp;';
+			'&ensp;';
+	}
+
+	// parser.inc.php
+	$add_markup = $add_markup_helper = '';
+	if (exist_plugin_inline('parser')) {
+		$currentParser = do_plugin_inline('parser', 'get_mark', $s_postdata);
+		if (!$currentParser) $currentParser = ((isset($vars['digest']) && $vars['digest']) || is_page($page)) ? false : PLUGIN_PARSER_DEFAULT;
+		$s_postdata = do_plugin_inline('parser', 'remove_mark', $s_postdata);
+		$parsers = do_plugin_inline('parser', 'list', $dummy);
+		$parsers = explode("\n", $parsers);
+		foreach ($parsers as $parser) {
+			$add_markup .= '<option value="' . $parser . '"' . (($parser == $currentParser)? ' selected' : '') . '>' . $parser . '</option>';
+		}
+		if ($add_markup) {
+			$add_markup = '<div style="float:left;width:7em;margin-right:.25em"><select id="_edit_form_markup" name="markup" title="Markup"><option value="">PukiWiki</option>' . $add_markup . '</select></div>';
+			$add_markup_helper = do_plugin_inline('parser', 'edit_helper', $dummy);
+			if ($add_markup_helper) $add_markup_helper .= <<<EOT
+			<script><!--'use strict';
+			document.addEventListener('DOMContentLoaded', function(e) {
+				const	select = document.getElementById('_edit_form_markup');
+				select.addEventListener('change', function(e) {
+					document.dispatchEvent(new CustomEvent('PukiWikiParserEditHelperChange', {detail: {parser:this.value, textareaSelector:'textarea#_edit_form_text'}}));
+				});
+				document.dispatchEvent(new CustomEvent('PukiWikiParserEditHelperChange', {detail: {parser:'${currentParser}', textareaSelector:'textarea#_edit_form_text'}}));
+			}, {once: true, passive: true});
+			--></script>
+			EOT;
+		}
 	}
 
 	// 'margin-bottom', 'float:left', and 'margin-top'
@@ -421,7 +449,7 @@ $template
   <input type="hidden" name="digest" value="$s_digest" />
   <input type="hidden" id="_msg_edit_cancel_confirm" value="$h_msg_edit_cancel_confirm" />
   <input type="hidden" id="_msg_edit_unloadbefore_message" value="$h_msg_edit_unloadbefore_message" />
-  <textarea name="msg" rows="$rows" cols="$cols">$s_postdata</textarea>
+  <textarea id="_edit_form_text" name="msg" rows="$rows" cols="$cols">$s_postdata</textarea>
   <br />
   <div style="float:left;">
    <input type="submit" name="preview" value="$btn_preview" accesskey="p" />
@@ -429,6 +457,7 @@ $template
    $add_top
    $add_notimestamp
   </div>
+  $add_markup
   <textarea name="original" rows="1" cols="1" style="display:none">$s_original</textarea>
  </form>
  <form action="$script" method="post" class="_plugin_edit_cancel" style="margin-top:0;">
@@ -437,6 +466,7 @@ $template
   <input type="submit" name="cancel" value="$_btn_cancel" accesskey="c" />
  </form>
 </div>
+$add_markup_helper
 EOD;
 
 	$body .= '<ul><li><a href="' .
