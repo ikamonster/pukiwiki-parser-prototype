@@ -39,7 +39,7 @@ plugin/parser/markdown/converter.inc.php 内のMarkdown→HTML変換のコード
 
 ## 必須環境
 同名のパーサー実装クラスやパーサー用プラグイン関数の区別に名前空間を使用するため、PHP5.3以上が必要です。  
-PHP5.3未満の環境ではこの機能拡張が自動的に無効化され、素のPukiWikiとして動作します。
+PHP5.3未満の環境ではこの機能拡張が自動的に無効化され、プレーンなPukiWikiとして動作します。
 
 <br>
 
@@ -57,9 +57,7 @@ PHP5.3未満の環境ではこの機能拡張が自動的に無効化され、�
 |plugin/parser/markdown/plugin/|comment.inc.php|Markdown記法用commentプラグイン|追加|
 |plugin/parser/markdown/vendor/|Parsedown.php|Markdown→HTML変換ライブラリ Parsedown|追加|
 
-<br>
-
-## PukiWiki v1.5.4 オリジナルとの差分
+### PukiWiki v1.5.4 オリジナルとの差分
 https://github.com/ikamonster/pukiwiki-parser-prototype/compare/original...main?diff=split#files_bucket
 
 <br><br><br><br>
