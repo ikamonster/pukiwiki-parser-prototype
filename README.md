@@ -1,9 +1,17 @@
 # PukiWiki　対応マークアップ拡張
 
-インストール直後の素の [PukiWiki v1.5.4](https://pukiwiki.osdn.jp/?PukiWiki/Download/1.5.4) のディレクトリに ``lib/`` と ``plugin/`` を上書きコピーしてください。  
-すると、ページ編集画面にマークアップ選択ボックスが現れます。そこで「markdown」を選ぶと、ページをMarkdown記法で記述できるようになります。従来のPukiWiki記法か新たなMarkdown記法か、ページごとに選ぶことができます。
+任意のマークアップパーサーをPukiWikiに組み込むための仕組みの提案です。  
+マークアップパーサーはいくつでも追加することができ、どれを使うかページごとに選ぶことができます。
 
-任意のマークアップパーサーをPukiWikiに複数組み込むための仕組みの提案です。
+<br>
+
+## インストール
+
+下記GitHubページからダウンロードした ``lib/`` と ``plugin/`` を、インストール直後の素の [PukiWiki v1.5.4](https://pukiwiki.osdn.jp/?PukiWiki/Download/1.5.4) のディレクトリに上書きコピーしてください。
+
+https://github.com/ikamonster/pukiwiki-parser-prototype
+
+すると、ページ編集画面にマークアップ選択ボックスが現れます。そこで「markdown」を選ぶと、ページをMarkdown記法で記述できるようになります。従来のPukiWiki記法か新たなMarkdown記法か、ページごとに選ぶことができます。
 
 <br>
 
