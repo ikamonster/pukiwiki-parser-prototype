@@ -1,17 +1,18 @@
 <?php
 // PukiWiki - Yet another WikiWikiWeb clone
-// parser.inc.php
+// parser.inc.php, v1.0.1 2022 M.Taniguchi
 // Copyright
 //   2002-2020 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
 // License: GPL v2 or (at your option) any later version
 //
 // マークアップ記法汎用パーサープラグイン
-ini_set('display_errors', 'On');
 
-if (!defined('PLUGIN_PARSER_DEFAULT')) define('PLUGIN_PARSER_DEFAULT', ''); // ページ新規作成時のデフォルトパーサー名（空ならPukiWiki記法）
-if (!defined('PLUGIN_PARSER_DIR')) define('PLUGIN_PARSER_DIR', PLUGIN_DIR . 'parser/'); // パーサー実装ファイル配置ディレクトリ
-if (!defined('PLUGIN_PARSER_NAME_REGEX')) define('PLUGIN_PARSER_NAME_REGEX', '[a-zA-Z0-9_\-]+'); // パーサー名を表す正規表現
+/////////////////////////////////////////////////
+// マークアップ記法汎用パーサープラグイン設定（parser.inc.php）
+if (!defined('PLUGIN_PARSER_DEFAULT'))    define('PLUGIN_PARSER_DEFAULT',    '');                     // ページ新規作成時のデフォルトパーサー名（空ならPukiWiki記法）
+if (!defined('PLUGIN_PARSER_DIR'))        define('PLUGIN_PARSER_DIR',        PLUGIN_DIR . 'parser/'); // パーサー実装ファイル配置ディレクトリ
+if (!defined('PLUGIN_PARSER_NAME_REGEX')) define('PLUGIN_PARSER_NAME_REGEX', '[a-zA-Z0-9_\-]+');      // パーサー名を表す正規表現
 
 
 
