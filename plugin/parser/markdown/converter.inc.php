@@ -1,6 +1,6 @@
 <?php
 // PukiWiki - Yet another WikiWikiWeb clone
-// converter.inc.php, v1.0.1 2022 M.Taniguchi
+// converter.inc.php, v1.0.2 2022 M.Taniguchi
 // Copyright
 //   2002-2020 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
@@ -161,6 +161,7 @@ class Converter extends \PluginParserConverter {
 								SideBySideFullscreen: false,
 								status: false,
 								tabSize: 4,
+								unorderedListStyle: '-',
 								spellChecker: false,
 								nativeSpellcheck: false,
 								${height}
