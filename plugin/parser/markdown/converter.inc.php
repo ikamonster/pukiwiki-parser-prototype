@@ -1,6 +1,6 @@
 <?php
 // PukiWiki - Yet another WikiWikiWeb clone
-// converter.inc.php, v1.0.2 2022 M.Taniguchi
+// converter.inc.php, v1.0.3 2022 M.Taniguchi
 // Copyright
 //   2002-2020 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
@@ -73,11 +73,13 @@ class Converter extends \PluginParserConverter {
 				$line = preg_replace('/\[\[(.+)[\:\>](https?\:\/\/[\-_\.\!\~\*\'\(\)a-zA-Z0-9\;\/\?\:\@\&\=\+\$\,\%\#]+)\]\]/', "[$1]($2)", $line); // Pukiwiki式リンクをMarkdown式リンクに変換
 				$line = preg_replace('/\[\#[a-zA-Z0-9]{8}\]$/', "", $line); // Pukiwiki式アンカーを非表示に
 				$line = $this->make_link($line);
+
 			}
-			// ファイル読み込んだ場合に改行コードが末尾に付いていることがあるので削除
-			$line = str_replace(array("\r\n","\n","\r"), '', $line);
 
 			if (PLUGIN_PARSER_CONVERTER_MARKDOWN_TEST) { var_dump(htmlsc($line)); echo "<br/><br/>\n"; }; //【開発用】
+
+			// ファイル読み込んだ場合に改行コードが末尾に付いていることがあるので削除
+			$line = preg_replace('/[\n\r]$/', '', $line);
 			$text .= $line . "\n";
 		}
 
