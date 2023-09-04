@@ -1,6 +1,6 @@
 <?php
 // PukiWiki - Yet another WikiWikiWeb clone
-// converter.inc.php, v1.0.3 2022 M.Taniguchi
+// converter.inc.php, v1.0.4 2022 M.Taniguchi
 // Copyright
 //   2002-2020 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
@@ -145,8 +145,8 @@ class Converter extends \PluginParserConverter {
 			$css = PLUGIN_PARSER_CONVERTER_MARKDOWN_EDITHELPER_CSS_URL;
 			$preview = PLUGIN_PARSER_CONVERTER_MARKDOWN_HEADER_LEVEL_REVISE ? '' : ",'|','preview'";
 			$result = <<<EOT
-			<link rel="stylesheet" href="${css}"/>
-			<script src="${js}" defer></script>
+			<link rel="stylesheet" href="{$css}"/>
+			<script src="{$js}" defer></script>
 			<script><!--'use strict';
 				const	__PukiWikiParserMarkdownHelper__ = { textarea: null, instance: null };	// ヘルパー情報（よそと被らない名前にしておく）
 
@@ -159,14 +159,14 @@ class Converter extends \PluginParserConverter {
 						if (__PukiWikiParserMarkdownHelper__.textarea && !__PukiWikiParserMarkdownHelper__.instance) {
 							__PukiWikiParserMarkdownHelper__.instance = new EasyMDE({
 								element: __PukiWikiParserMarkdownHelper__.textarea,
-								toolbar: ['bold','italic','strikethrough','heading','|','code', 'quote','unordered-list','ordered-list','|','link','image','table','horizontal-rule'${preview},'|','guide'],
+								toolbar: ['bold','italic','strikethrough','heading','|','code', 'quote','unordered-list','ordered-list','|','link','image','table','horizontal-rule'{$preview},'|','guide'],
 								SideBySideFullscreen: false,
 								status: false,
 								tabSize: 4,
 								unorderedListStyle: '-',
 								spellChecker: false,
 								nativeSpellcheck: false,
-								${height}
+								{$height}
 							});
 						}
 					} else {
