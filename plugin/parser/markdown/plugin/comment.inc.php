@@ -51,7 +51,7 @@ function plugin_comment_action()
 		$comment = str_replace("\x08NAME\x08", $_name, $comment);
 		$comment = str_replace("\x08NOW\x08",  $_now,  $comment);
 	}
-	$comment = str_replace('-', "\t", $head) . '* ' . $comment; // インデント付きリスト記法をMarkdownに変換
+	$comment = str_replace('-', "\t", $head) . "- " . $comment; // インデント付きリスト記法をMarkdownに変換
 
 	$postdata    = '';
 	$comment_no  = 0;
@@ -139,6 +139,8 @@ function plugin_comment_convert()
  </div>
 </form>
 EOD;
+
+	$string = preg_replace("/((\s|\n){1,})/i", ' ', $string); // 改行含む連続空白を単一空白に（※「//」コメント非対応）
 
 	return $string;
 }
