@@ -1,6 +1,6 @@
 <?php
 // PukiWiki - Yet another WikiWikiWeb clone
-// converter.inc.php, v1.0.4 2022 M.Taniguchi
+// converter.inc.php, v1.0.5 2022 M.Taniguchi
 // Copyright
 //   2002-2020 PukiWiki Development Team
 //   2001-2002 Originally written by yu-ji
@@ -40,14 +40,14 @@ class Converter extends \PluginParserConverter {
 			if (PLUGIN_PARSER_CONVERTER_MARKDOWN_TEST) { var_dump(htmlsc($line)); echo "<br/>\n"; }; //【開発用】
 
 			// HTMLエンコード／デコードの影響を受けないよう &amp;,&lt;,&gt; を置換
-			$line = str_replace(['&amp;','&lt;','&gt;'], ['iXLNVqVwDrLXix9fRieiFnC6d','dg57zQaB94fkztb44F2DrT4i','mnJ2LKsjgHpSp3hcTzkmVaFa'], $line);
+			$line = str_replace(['&amp;','&lt;','&gt;'], ['\x08iXLNVqVwDrLXix9fRieiFnC6d','dg57zQaB94fkztb44F2DrT4i','mnJ2LKsjgHpSp3hcTzkmVaFa'], $line);
 
 			if (!PKWKEXP_DISABLE_MULTILINE_PLUGIN_HACK && preg_match('/^#[^{]+(\{\{+)\s*$/' . $pregU, $line, $matches)) {
 				// Multiline-enabled block plugin
 				$len = strlen($matches[1]);
 				$line .= "\r"; // Delimiter
 				while (!empty($lines)) {
-					$next_line = preg_replace("/[\r\n]*$/", '', array_shift($lines));
+					$next_line = preg_replace("/[\r\n]*$/" . $pregU, '', array_shift($lines));
 					if (preg_match('/\}{' . $len . '}/' . $pregU, $next_line)) {
 						$line .= $next_line;
 						break;
@@ -70,16 +70,15 @@ class Converter extends \PluginParserConverter {
 				// Markdown記法の画像の場合はmake_linkに渡さない
 			} else {
 				// $line = preg_replace('/\[(.*?)\]\((https?\:\/\/[\-_\.\!\~\*\'\(\)a-zA-Z0-9\;\/\?\:\@\&\=\+\$\,\%\#]+)( )?(\".*\")?\)/', "[[$1>$2]]", $line); // Markdown式リンクをPukiwiki式リンクに変換
-				$line = preg_replace('/\[\[(.+)[\:\>](https?\:\/\/[\-_\.\!\~\*\'\(\)a-zA-Z0-9\;\/\?\:\@\&\=\+\$\,\%\#]+)\]\]/', "[$1]($2)", $line); // Pukiwiki式リンクをMarkdown式リンクに変換
-				$line = preg_replace('/\[\#[a-zA-Z0-9]{8}\]$/', "", $line); // Pukiwiki式アンカーを非表示に
+				$line = preg_replace('/\[\[(.+)[\:\>](https?\:\/\/[\-_\.\!\~\*\'\(\)a-zA-Z0-9\;\/\?\:\@\&\=\+\$\,\%\#]+)\]\]/' . $pregU, "[$1]($2)", $line); // Pukiwiki式リンクをMarkdown式リンクに変換
+				$line = preg_replace('/\[\#[a-zA-Z0-9]{8}\]$/' . $pregU, "", $line); // Pukiwiki式アンカーを非表示に
 				$line = $this->make_link($line);
-
 			}
 
-			if (PLUGIN_PARSER_CONVERTER_MARKDOWN_TEST) { var_dump(htmlsc($line)); echo "<br/><br/>\n"; }; //【開発用】
+			if (PLUGIN_PARSER_CONVERTER_MARKDOWN_TEST) { var_dump(htmlsc(trim($line))); echo "<br/><br/>\n"; }; //【開発用】
 
 			// ファイル読み込んだ場合に改行コードが末尾に付いていることがあるので削除
-			$line = preg_replace('/[\n\r]$/', '', $line);
+			$line = preg_replace('/[\n\r]+$/' . $pregU, '', $line);
 			$text .= $line . "\n";
 		}
 
@@ -98,7 +97,7 @@ class Converter extends \PluginParserConverter {
 		}, $text);
 
 		// 置換しておいた &amp;,&lt;,&gt; を表示用に戻す
-		$text = str_replace(['iXLNVqVwDrLXix9fRieiFnC6d','dg57zQaB94fkztb44F2DrT4i','mnJ2LKsjgHpSp3hcTzkmVaFa'], ['&amp;amp;','&amp;lt;','&amp;gt;'], $text);
+		$text = str_replace(['\x08iXLNVqVwDrLXix9fRieiFnC6d','dg57zQaB94fkztb44F2DrT4i','mnJ2LKsjgHpSp3hcTzkmVaFa'], ['&amp;amp;','&amp;lt;','&amp;gt;'], $text);
 
 		return $text;
 	}
@@ -259,7 +258,7 @@ class MyParsedown extends \Parsedown { //Parsedown→ParsedownExtraに変更し�
 	// 見出し生成メソッドをオーバーライドし、PukiWikiプラグイン記述と混同しないよう"#"の後の空白を必須とする。さらにid属性やaタグを追加する
 	public	$contents = [[], [], []];	// 目次用テーブル
 	protected function blockHeader($Line) {
-		if (!preg_match('/#+\s+/', $Line['text'])) return; // "#"の後の空白判定
+		if (!preg_match('/#+\s+/' . get_preg_u(), $Line['text'])) return; // "#"の後の空白判定
 
 		$Block = parent::blockHeader($Line);
 		if (!is_array($Block)) return;
@@ -284,7 +283,7 @@ class MyParsedown extends \Parsedown { //Parsedown→ParsedownExtraに変更し�
 		$Block['element']['handler']['argument'] = $text . $anchorTag;
 
 		// 目次用テーブル作成
-		$label_ = trim(preg_replace('/^#+\s+/', '', $Line['text']));
+		$label_ = trim(preg_replace('/^#+\s+/' . get_preg_u(), '', $Line['text']));
 		$len_ = count($this->contents[0]);
 		$this->contents[0][$len_] = $level_;
 		$this->contents[1][$len_] = $label_;
@@ -367,9 +366,9 @@ class MyParsedown extends \Parsedown { //Parsedown→ParsedownExtraに変更し�
 	protected function inlineCode($Excerpt) {
 		$marker = $Excerpt['text'][0];
 
-		if (preg_match('/^(['.$marker.']++)[ ]*+(.+?)[ ]*+(?<!['.$marker.'])\1(?!'.$marker.')/s', $Excerpt['text'], $matches)) {
+		if (preg_match('/^(['.$marker.']++)[ ]*+(.+?)[ ]*+(?<!['.$marker.'])\1(?!'.$marker.')/s' . get_preg_u(), $Excerpt['text'], $matches)) {
 			$text = $matches[2];
-			$text = preg_replace('/[ ]*+\n/', ' ', $text);
+			$text = preg_replace('/[ ]*+\n/' . get_preg_u(), ' ', $text);
 
 			return array(
 				'extent' => strlen($matches[0]),
